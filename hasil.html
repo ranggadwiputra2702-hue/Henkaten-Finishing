@@ -1,416 +1,629 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hasil Henkaten</title>
+  <title>Database Henkaten 4M - Toyota TPS</title>
+
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Supabase JS Library CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
+    :root {
+      --toyota-red: #EB0A1E;
+      --toyota-dark: #1A1A1A;
+      --toyota-gray: #F4F6F8;
+      --border-color: #D1D5DB;
+      --text-main: #1F2937;
+      --text-muted: #6B7280;
+    }
+
     * {
       box-sizing: border-box;
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #6c9ddf;
-      color: #1f2937;
+      background-color: #EBF0F5;
+      color: var(--text-main);
+      padding-bottom: 50px;
     }
 
-    .container {
-      max-width: 1100px;
-      margin: 32px auto;
-      padding: 20px;
-    }
-
-    .card {
-      background: #ffffff;
-      border-radius: 10px;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-      overflow: hidden;
-    }
-
-    .header {
-      background: #0f4c81;
+    /* Top Corporate Bar */
+    .top-bar {
+      background: var(--toyota-dark);
       color: #ffffff;
-      padding: 24px;
-    }
-
-    .header h1 {
-      margin: 0 0 6px;
-      font-size: 28px;
-    }
-
-    .header p {
-      margin: 0;
-      opacity: 0.9;
-    }
-
-    .toolbar {
+      padding: 8px 32px;
+      font-size: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 16px 20px;
-      border-bottom: 1px solid #e5e7eb;
-      flex-wrap: wrap;
-      gap: 12px;
+      border-bottom: 3px solid var(--toyota-red);
     }
 
-    .toolbar input {
-      max-width: 300px;
-    }
-
-    .btn-menu {
-      display: inline-block;
-      padding: 10px 18px;
-      background: #0f4c81;
-      color: #ffffff;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 14px;
-      border: 0;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .btn-menu:hover {
-      background: #0a3a63;
-    }
-
-    .btn-sm {
-      padding: 6px 12px;
-      font-size: 13px;
-      border-radius: 6px;
-      background: #dc2626;
+    .top-bar-badge {
+      background: var(--toyota-red);
       color: #fff;
-      border: 0;
-      cursor: pointer;
-    }
-
-    .btn-sm:hover {
-      background: #b91c1c;
-    }
-
-    .btn-detail {
-      padding: 6px 12px;
-      font-size: 13px;
-      border-radius: 6px;
-      background: #0f4c81;
-      color: #fff;
-      border: 0;
-      cursor: pointer;
-    }
-
-    .btn-detail:hover {
-      background: #0a3a63;
-    }
-
-    .tag {
-      display: inline-block;
       padding: 2px 8px;
-      border-radius: 10px;
-      font-size: 11px;
+      border-radius: 4px;
       font-weight: 700;
-      background: #e5e7eb;
-      color: #374151;
-      margin: 1px;
+      letter-spacing: 0.5px;
     }
 
-    .tag.ya {
-      background: #dcfce7;
-      color: #166534;
+    .container {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 16px;
     }
 
-    /* Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 999;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .modal.show {
+    /* Main Dashboard Header */
+    .dashboard-header {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 24px 32px;
       display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 20px;
+      border-left: 6px solid var(--toyota-red);
     }
 
-    .modal-content {
-      background: #fff;
-      border-radius: 10px;
-      max-width: 720px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-      padding: 24px;
-      position: relative;
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 20px;
     }
 
-    .modal-content h2 {
-      margin: 0 0 16px;
-      color: #0f4c81;
+    .toyota-logo-text {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--toyota-red);
+      letter-spacing: -1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .modal-content .close {
-      position: absolute;
-      top: 14px;
-      right: 18px;
-      font-size: 24px;
-      cursor: pointer;
-      color: #6b7280;
-    }
-
-    .modal-content .close:hover {
-      color: #000;
-    }
-
-    .modal-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 20px;
-    }
-
-    .modal-grid .full {
-      grid-column: 1 / -1;
-    }
-
-    .modal-grid .label {
+    .header-info h1 {
+      margin: 0;
+      font-size: 22px;
+      color: var(--toyota-dark);
       font-weight: 700;
-      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    .modal-grid .value {
-      color: #1f2937;
+    .header-info p {
+      margin: 4px 0 0;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .btn-header {
+      background: #ffffff;
+      color: var(--toyota-dark);
+      border: 1px solid var(--border-color);
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 13px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      transition: all 0.2s;
+    }
+
+    .btn-header:hover {
+      background: var(--toyota-gray);
+      border-color: #9CA3AF;
+    }
+
+    /* Controls Bar */
+    .controls-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 12px;
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .search-box input, .search-box select {
+      padding: 10px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      background: #FAFAFA;
+    }
+
+    .search-box input:focus, .search-box select:focus {
+      border-color: var(--toyota-red);
+      background: #fff;
+    }
+
+    .btn-refresh {
+      background: var(--toyota-dark);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .btn-refresh:hover {
+      background: #333;
+    }
+
+    /* Table Container */
+    .table-card {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      overflow: hidden;
+      border: 1px solid #E5E7EB;
+    }
+
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    thead {
+      background: #F8FAFC;
+      border-bottom: 2px solid #E5E7EB;
     }
 
     th {
-      background: #f1f5f9;
-      text-align: left;
-      padding: 12px 14px;
-      font-size: 13px;
+      padding: 14px 16px;
+      font-weight: 700;
+      color: var(--toyota-dark);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
       white-space: nowrap;
     }
 
     td {
-      padding: 10px 14px;
-      font-size: 14px;
-      border-bottom: 1px solid #e5e7eb;
+      padding: 14px 16px;
+      border-bottom: 1px solid #E5E7EB;
+      vertical-align: middle;
     }
 
-    tr:hover {
-      background: #f8fafc;
+    tbody tr:hover {
+      background-color: #F9FAFB;
     }
 
-    .empty {
+    /* Badges */
+    .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-block;
       text-align: center;
-      padding: 48px 20px;
-      color: #6b7280;
     }
 
-    .empty p {
-      margin: 6px 0;
+    .badge-man { background: #E0F2FE; color: #0369A1; }
+    .badge-machine { background: #FEF3C7; color: #B45309; }
+    .badge-material { background: #DCFCE7; color: #15803D; }
+    .badge-method { background: #F3E8FF; color: #6B21A8; }
+
+    .badge-status {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
     }
 
-    @media (max-width: 720px) {
-      .container {
-        margin: 0;
-        padding: 12px;
-      }
+    .status-waiting { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+    .status-approved { background: #D1FAE5; color: #065F46; border: 1px solid #A7F3D0; }
+    .status-draft { background: #E5E7EB; color: #374151; border: 1px solid #D1D5DB; }
 
-      table {
-        font-size: 13px;
-      }
+    .badge-rank-a { color: #DC2626; font-weight: 800; }
+    .badge-rank-b { color: #D97706; font-weight: 800; }
+    .badge-rank-c { color: #16A34A; font-weight: 800; }
 
-      th, td {
-        padding: 8px 10px;
-      }
+    .btn-action {
+      background: var(--toyota-gray);
+      border: 1px solid var(--border-color);
+      color: var(--toyota-dark);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    @media print {
-      body {
-        background: #ffffff;
-      }
+    .btn-action:hover {
+      background: var(--toyota-red);
+      color: white;
+      border-color: var(--toyota-red);
+    }
 
-      .container {
-        margin: 0;
-        max-width: none;
-      }
+    /* Detail Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+    }
 
-      .card {
-        box-shadow: none;
-      }
+    .modal-content {
+      background: #fff;
+      border-radius: 12px;
+      max-width: 700px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
 
-      .toolbar {
-        display: none !important;
-      }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--toyota-red);
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 18px;
+      color: var(--toyota-dark);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      font-size: 13px;
+    }
+
+    .detail-item {
+      background: #F8FAFC;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #E2E8F0;
+    }
+
+    .detail-item.full {
+      grid-column: 1 / -1;
+    }
+
+    .detail-item label {
+      font-weight: 700;
+      font-size: 11px;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+
+    .detail-item div {
+      color: var(--text-main);
+      line-height: 1.4;
     }
   </style>
 </head>
 <body>
+
+  <!-- Top Corporate Ribbon -->
+  <div class="top-bar">
+    <div>
+      <span class="top-bar-badge">TPS</span> TOYOTA PRODUCTION SYSTEM &bull; HENKATEN DATABASE
+    </div>
+    <div>
+      <i class="fa-solid fa-database"></i> CENTRAL DATA CONTROL
+    </div>
+  </div>
+
   <main class="container">
-    <div class="card">
-      <div class="header">
-        <h1>Hasil Pengajuan Henkaten</h1>
-        <p>Daftar seluruh pengajuan perubahan yang telah dicatat.</p>
+
+    <!-- Header Dashboard -->
+    <div class="dashboard-header">
+      <div class="brand-section">
+        <div class="toyota-logo-text">
+          <i class="fa-solid fa-industry"></i> TOYOTA
+        </div>
+        <div class="header-info">
+          <h1>Database Pengajuan Henkaten</h1>
+          <p>Daftar Riwayat Change Point 4M Terdaftar</p>
+        </div>
       </div>
-
-      <div class="toolbar">
-        <a href="index.html" class="btn-menu">&larr; Kembali ke Form</a>
-        <input type="text" id="searchInput" placeholder="Cari nomor, nama, atau judul..." />
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th>No</th>
-            <th>Tanggal</th>
-            <th>Nomor Henkaten</th>
-            <th>Nama Pemohon</th>
-            <th>Departemen</th>
-            <th>Judul Perubahan</th>
-            <th>Kategori</th>
-            <th>Change Point</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-
-      <div class="empty" id="emptyState">
-        <p>Belum ada data pengajuan.</p>
-        <p><a href="index.html" class="btn-menu">Isi Form Henkaten</a></p>
+      <div class="header-actions">
+        <a href="index.html" class="btn-header">
+          <i class="fa-solid fa-plus"></i> Form Buat Pengajuan
+        </a>
       </div>
     </div>
-    <div class="modal" id="detailModal">
-      <div class="modal-content">
-        <span class="close" id="modalClose">&times;</span>
-        <h2>Detail Henkaten</h2>
-        <div id="modalBody"></div>
+
+    <!-- Controls Bar -->
+    <div class="controls-card">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Cari Nomor, Nama, Judul, Area..." style="flex:2;">
+        <select id="filterKategori" style="flex:1;">
+          <option value="">Semua 4M</option>
+          <option value="Man">Man</option>
+          <option value="Machine">Machine</option>
+          <option value="Material">Material</option>
+          <option value="Method">Method</option>
+        </select>
+      </div>
+      <button class="btn-refresh" onclick="fetchData()">
+        <i class="fa-solid fa-rotate-right"></i> Refresh
+      </button>
+    </div>
+
+    <!-- Table Result -->
+    <div class="table-card">
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>No. Henkaten</th>
+              <th>Tgl Pengajuan</th>
+              <th>Pemohon / Line</th>
+              <th>4M</th>
+              <th>Judul Perubahan</th>
+              <th>Dampak</th>
+              <th>Efektif</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr>
+              <td colspan="9" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                <i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br>Memuat data dari Supabase...
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
+
   </main>
 
+  <!-- Modal Detail -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="m_nomor">Detail Henkaten</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="detail-grid" id="modalBody">
+        <!-- Content diisi via JavaScript -->
+      </div>
+    </div>
+  </div>
+
   <script>
-    const tbody = document.getElementById("tableBody");
-    const empty = document.getElementById("emptyState");
-    const searchInput = document.getElementById("searchInput");
-    const modal = document.getElementById("detailModal");
-    const modalBody = document.getElementById("modalBody");
+    // Config Supabase
+    const SUPABASE_URL = "https://kcmrypsdwzhdtczoxkju.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_yjOJIW-hPvLmC5g5tt7bzw_JQMsX0st";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    function changePointTags(item) {
-      var list = item.changePoint;
-      if (!list || list.length === 0) return "-";
-      return list.map(function (l) { return "<span class=\"tag ya\">" + l + "</span>"; }).join(" ");
+    let rawData = [];
+
+    // Load Data saat halaman terbuka
+    document.addEventListener("DOMContentLoaded", fetchData);
+
+    async function fetchData() {
+      const tbody = document.getElementById("tableBody");
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" style="text-align: center; padding: 30px; color: var(--text-muted);">
+            <i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br>Memuat data...
+          </td>
+        </tr>
+      `;
+
+      try {
+        const { data, error } = await supabaseClient
+          .from("henkaten_submissions")
+          .select("*")
+          .order("id", { ascending: false });
+
+        if (error) throw error;
+
+        rawData = data || [];
+        renderTable(rawData);
+
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 30px; color: red;">
+              <i class="fa-solid fa-triangle-exclamation fa-2x"></i><br><br>
+              Gagal memuat data!<br><small>${err.message}</small>
+            </td>
+          </tr>
+        `;
+      }
     }
 
-    function showDetail(item) {
-      var html =
-        '<div class="modal-grid">' +
-          '<div class="full"><span class="label">Nomor Henkaten:</span> <span class="value">' + (item.nomor || "-") + '</span></div>' +
-          '<div class="full"><span class="label">Judul Perubahan:</span> <span class="value">' + (item.judul || "-") + '</span></div>' +
-          '<div><span class="label">Tanggal:</span> <span class="value">' + (item.tanggal || "-") + '</span></div>' +
-          '<div><span class="label">Tanggal Efektif:</span> <span class="value">' + (item.tanggalEfektif || "-") + '</span></div>' +
-          '<div><span class="label">Nama:</span> <span class="value">' + (item.nama || "-") + '</span></div>' +
-          '<div><span class="label">Departemen:</span> <span class="value">' + (item.departemen || "-") + '</span></div>' +
-          '<div><span class="label">Jabatan:</span> <span class="value">' + (item.jabatan || "-") + '</span></div>' +
-          '<div><span class="label">Proses:</span> <span class="value">' + (item.area || "-") + '</span></div>' +
-          '<div><span class="label">Kategori:</span> <span class="value">' + (item.kategori || "-") + '</span></div>' +
-          '<div><span class="label">Dampak:</span> <span class="value">' + (item.dampak || "-") + '</span></div>' +
-          '<div><span class="label">Pelatihan:</span> <span class="value">' + (item.pelatihan || "-") + '</span></div>' +
-          '<div class="full"><span class="label">Kondisi Saat Ini:</span> <span class="value">' + (item.kondisiSaatIni || "-") + '</span></div>' +
-          '<div class="full"><span class="label">Perubahan:</span> <span class="value">' + (item.perubahan || "-") + '</span></div>' +
-          '<div class="full"><span class="label">Alasan:</span> <span class="value">' + (item.alasan || "-") + '</span></div>' +
-          '<div class="full"><span class="label">Risiko:</span> <span class="value">' + (item.risiko || "-") + '</span></div>' +
-          '<div class="full"><span class="label">Tindakan Pencegahan:</span> <span class="value">' + (item.tindakan || "-") + '</span></div>' +
-          '<div class="full" style="margin-top:12px;padding-top:12px;border-top:2px solid #e5e7eb;"><strong>Jenis Change Point</strong></div>' +
-          '<div class="full"><span class="value">' + changePointTags(item) + '</span></div>' +
-        '</div>';
-      modalBody.innerHTML = html;
-      modal.classList.add("show");
-    }
-
-    function render(data) {
+    function renderTable(dataList) {
+      const tbody = document.getElementById("tableBody");
       tbody.innerHTML = "";
 
-      if (!data || data.length === 0) {
-        empty.style.display = "block";
+      if (dataList.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 30px; color: var(--text-muted);">
+              Belum ada data pengajuan Henkaten yang tersimpan.
+            </td>
+          </tr>
+        `;
         return;
       }
 
-      empty.style.display = "none";
+      dataList.forEach(item => {
+        const row = document.createElement("tr");
 
-      data.forEach(function (item, index) {
-        var tr = document.createElement("tr");
-        tr.innerHTML =
-          "<td>" + (index + 1) + "</td>" +
-          "<td>" + (item.tanggal || "-") + "</td>" +
-          "<td>" + (item.nomor || "-") + "</td>" +
-          "<td>" + (item.nama || "-") + "</td>" +
-          "<td>" + (item.departemen || "-") + "</td>" +
-          "<td>" + (item.judul || "-") + "</td>" +
-          "<td>" + (item.kategori || "-") + "</td>" +
-          "<td>" + changePointTags(item) + "</td>" +
-          "<td>" +
-            "<button class=\"btn-detail\" data-index=\"" + index + "\">Detail</button> " +
-            "<button class=\"btn-sm\" data-index=\"" + index + "\">Hapus</button>" +
-          "</td>";
+        // Badge 4M Class
+        let badge4MClass = "badge-man";
+        if (item.kategori === "Machine") badge4MClass = "badge-machine";
+        if (item.kategori === "Material") badge4MClass = "badge-material";
+        if (item.kategori === "Method") badge4MClass = "badge-method";
 
-        tr.querySelector(".btn-detail").addEventListener("click", function () {
-          showDetail(item);
-        });
+        // Status Badge
+        let statusClass = "status-waiting";
+        if (item.status === "Approved") statusClass = "status-approved";
+        if (item.status === "Draft") statusClass = "status-draft";
 
-        tr.querySelector(".btn-sm").addEventListener("click", function () {
-          if (confirm("Hapus data ini?")) {
-            var stored = JSON.parse(localStorage.getItem("henkatenData") || "[]");
-            stored.splice(index, 1);
-            localStorage.setItem("henkatenData", JSON.stringify(stored));
-            render(stored);
-          }
-        });
+        // Rank Dampak
+        let rankClass = "badge-rank-c";
+        if (item.dampak === "Tinggi") rankClass = "badge-rank-a";
+        if (item.dampak === "Sedang") rankClass = "badge-rank-b";
 
-        tbody.appendChild(tr);
+        row.innerHTML = `
+          <td><strong>${item.nomor || '-'}</strong></td>
+          <td>${item.tanggal || '-'}</td>
+          <td>
+            <strong>${item.nama || '-'}</strong><br>
+            <small style="color:var(--text-muted);">${item.area || '-'}</small>
+          </td>
+          <td><span class="badge ${badge4MClass}">${item.kategori || '-'}</span></td>
+          <td>${item.judul || '-'}</td>
+          <td><span class="${rankClass}">${item.dampak || '-'}</span></td>
+          <td>${item.tanggal_efektif || '-'}</td>
+          <td><span class="badge-status ${statusClass}">${item.status || 'Waiting Approval'}</span></td>
+          <td>
+            <button class="btn-action" onclick="showDetail(${item.id})">
+              <i class="fa-solid fa-eye"></i> Detail
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
       });
     }
 
-    function filterData(data, keyword) {
-      if (!keyword) return data;
-      var lower = keyword.toLowerCase();
-      return data.filter(function (item) {
-        return (item.nomor && item.nomor.toLowerCase().includes(lower)) ||
-               (item.nama && item.nama.toLowerCase().includes(lower)) ||
-               (item.judul && item.judul.toLowerCase().includes(lower)) ||
-               (item.departemen && item.departemen.toLowerCase().includes(lower)) ||
-               (item.changePoint && item.changePoint.some(function (cp) { return cp.toLowerCase().includes(lower); }));
+    // Filter Search & Select
+    document.getElementById("searchInput").addEventListener("input", filterData);
+    document.getElementById("filterKategori").addEventListener("change", filterData);
+
+    function filterData() {
+      const keyword = document.getElementById("searchInput").value.toLowerCase();
+      const kategori = document.getElementById("filterKategori").value;
+
+      const filtered = rawData.filter(item => {
+        const matchesSearch = 
+          (item.nomor && item.nomor.toLowerCase().includes(keyword)) ||
+          (item.nama && item.nama.toLowerCase().includes(keyword)) ||
+          (item.judul && item.judul.toLowerCase().includes(keyword)) ||
+          (item.area && item.area.toLowerCase().includes(keyword));
+
+        const matchesKategori = kategori === "" || item.kategori === kategori;
+
+        return matchesSearch && matchesKategori;
       });
+
+      renderTable(filtered);
     }
 
-    document.getElementById("modalClose").addEventListener("click", function () {
-      modal.classList.remove("show");
-    });
+    // Modal Operations
+    function showDetail(id) {
+      const item = rawData.find(d => d.id === id);
+      if (!item) return;
 
-    modal.addEventListener("click", function (e) {
-      if (e.target === modal) modal.classList.remove("show");
-    });
+      document.getElementById("m_nomor").innerText = `Detail: ${item.nomor || 'No Number'}`;
+      
+      const changePoints = Array.isArray(item.change_point) ? item.change_point.join(', ') : (item.change_point || '-');
 
-    var storedData = JSON.parse(localStorage.getItem("henkatenData") || "[]");
-    render(storedData);
+      const modalBody = document.getElementById("modalBody");
+      modalBody.innerHTML = `
+        <div class="detail-item"><label>Tanggal Pengajuan</label><div>${item.tanggal || '-'}</div></div>
+        <div class="detail-item"><label>Shift Kerja</label><div>${item.shift || '-'}</div></div>
+        <div class="detail-item"><label>Nama Pemohon</label><div>${item.nama || '-'}</div></div>
+        <div class="detail-item"><label>Seksi / Dept</label><div>${item.departemen || '-'}</div></div>
+        <div class="detail-item"><label>Line / Area</label><div>${item.area || '-'}</div></div>
+        <div class="detail-item"><label>Model / Code</label><div>${item.line_code || '-'}</div></div>
+        <div class="detail-item"><label>PIC Supervisor</label><div>${item.pic || '-'}</div></div>
+        <div class="detail-item"><label>Elemen 4M</label><div><strong>${item.kategori || '-'}</strong></div></div>
+        
+        <div class="detail-item full"><label>Judul Perubahan</label><div><strong>${item.judul || '-'}</strong></div></div>
+        <div class="detail-item full"><label>Kondisi Saat Ini (Before)</label><div>${item.kondisi_saat_ini || '-'}</div></div>
+        <div class="detail-item full"><label>Rencana Perubahan (After)</label><div>${item.perubahan || '-'}</div></div>
+        <div class="detail-item full"><label>Alasan Perubahan</label><div>${item.alasan || '-'}</div></div>
 
-    searchInput.addEventListener("input", function () {
-      var filtered = filterData(storedData, this.value);
-      render(filtered);
-    });
+        <div class="detail-item"><label>Tingkat Dampak</label><div>${item.dampak || '-'}</div></div>
+        <div class="detail-item"><label>Sifat Perubahan</label><div>${item.tipe_perubahan || '-'}</div></div>
+        <div class="detail-item"><label>Tgl Trial</label><div>${item.trial_date || '-'}</div></div>
+        <div class="detail-item"><label>Tgl Efektif Masspro</label><div>${item.tanggal_efektif || '-'}</div></div>
+        <div class="detail-item full"><label>Change Point Focus</label><div>${changePoints}</div></div>
+        
+        <div class="detail-item full"><label>Potensi Risiko</label><div>${item.risiko || '-'}</div></div>
+        <div class="detail-item full"><label>Tindakan Pencegahan</label><div>${item.tindakan || '-'}</div></div>
+        <div class="detail-item full"><label>Status Pengajuan</label><div><strong>${item.status || '-'}</strong></div></div>
+      `;
 
-    window.addEventListener("storage", function () {
-      storedData = JSON.parse(localStorage.getItem("henkatenData") || "[]");
-      render(storedData);
-    });
+      document.getElementById("detailModal").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("detailModal").style.display = "none";
+    }
+
+    // Close modal click outside
+    window.onclick = function(event) {
+      const modal = document.getElementById("detailModal");
+      if (event.target === modal) {
+        closeModal();
+      }
+    };
   </script>
 </body>
 </html>
