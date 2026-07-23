@@ -1,10 +1,13 @@
-
 <!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Form Henkaten</title>
+  <title>Form Henkaten Finishing</title>
+  
+  <!-- Supabase JS Library CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -24,7 +27,7 @@
     }
 
     .card {
-      background:       #ffffff;
+      background: #ffffff;
       border-radius: 10px;
       box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
       overflow: hidden;
@@ -146,14 +149,27 @@
       color: #ffffff;
     }
 
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     .message {
       display: none;
       margin-top: 16px;
       padding: 12px;
       border-radius: 8px;
+      font-weight: 600;
+    }
+
+    .message.success {
       background: #dcfce7;
       color: #166534;
-      font-weight: 600;
+    }
+
+    .message.error {
+      background: #fee2e2;
+      color: #991b1b;
     }
 
     @media (max-width: 720px) {
@@ -174,33 +190,13 @@
         width: 100%;
       }
     }
-
-    @media print {
-      body {
-        background: #ffffff;
-      }
-
-      .container {
-        margin: 0;
-        max-width: none;
-      }
-
-      .card {
-        box-shadow: none;
-      }
-
-      .actions,
-      .message {
-        display: none !important;
-      }
-    }
   </style>
 </head>
 <body>
   <main class="container">
     <div class="card">
       <div class="header">
-        <h1>Form Henkaten Finishing </h1>
+        <h1>Form Henkaten Finishing</h1>
         <p>Formulir permintaan perubahan proses, produk, atau dokumen.</p>
       </div>
 
@@ -219,7 +215,8 @@
 
           <div class="field">
             <label for="nomor">Nomor Henkaten</label>
-            <input type="text" id="nomor" name="nomor" placeholder="Contoh: HKT-001/2026" />
+            <input type="text" id="nomor" name="nomor" placeholder="Otomatis saat tanggal dipilih" readonly aria-describedby="nomorHelp" />
+            <small id="nomorHelp" style="color:#64748b;">Format: tahun.bulan.tanggal.urutan</small>
           </div>
 
           <div class="field">
@@ -234,13 +231,12 @@
 
           <div class="field">
             <label for="jabatan">Jabatan</label>
-            <select id="jabatan" name="Jabatan" required>
-                <option value="">Pilih Jabatan</option>
-                <option>Operator</option>
-                <option>Team Leader</option>
-                <option>Group Leader</option>
-              </select>
-            </div>
+            <select id="jabatan" name="jabatan" required>
+              <option value="">Pilih Jabatan</option>
+              <option>Operator</option>
+              <option>Team Leader</option>
+              <option>Group Leader</option>
+            </select>
           </div>
 
           <div class="field">
@@ -342,36 +338,55 @@
             <label for="tindakan">Tindakan Pencegahan</label>
             <textarea id="tindakan" name="tindakan" placeholder="Tuliskan tindakan pencegahan atau kontrol yang diperlukan"></textarea>
           </div>
-
-          <div class="field full">
-            <label for="lampiran">Lampiran</label>
-            <input type="file" id="lampiran" name="lampiran" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" />
-          </div>
         </div>
 
         <div class="actions">
           <button type="reset" class="btn-reset">Reset</button>
-          <button type="submit" class="btn-submit">Kirim Form</button>
+          <button type="submit" class="btn-submit" id="submitBtn">Kirim Form</button>
         </div>
 
-        <div class="message" id="message">
-          Pengajuan Henkaten telah dicatat. Hubungkan tombol ini ke sistem Anda untuk pengiriman data yang sebenarnya.
-        </div>
+        <div class="message" id="message"></div>
       </form>
     </div>
   </main>
 
   <script>
+    // 1. INSIALISASI SUPABASE (Ganti dengan kredensial milikmu)
+    const SUPABASE_URL = "https://kcmrypsdwzhdtczoxkju.supabase.co/rest/v1/";
+    const SUPABASE_ANON_KEY = "sb_publishable_yjOJIW-hPvLmC5g5tt7bzw_JQMsX0st";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     const form = document.getElementById("henkatenForm");
     const message = document.getElementById("message");
     const tanggal = document.getElementById("tanggal");
+    const nomor = document.getElementById("nomor");
+    const submitBtn = document.getElementById("submitBtn");
+
+    // Generasi Format Nomor Henkaten
+    function formatNomorPreview(dateValue) {
+      if (!dateValue) return "";
+      var parts = dateValue.split("-");
+      if (parts.length !== 3) return "";
+      var randomSuffix = Math.floor(100 + Math.random() * 900); // Penanda acak 3 digit
+      return parts[0] + "." + parts[1] + "." + parts[2] + "." + randomSuffix;
+    }
 
     tanggal.valueAsDate = new Date();
+    nomor.value = formatNomorPreview(tanggal.value);
 
-    form.addEventListener("submit", function (event) {
+    tanggal.addEventListener("change", function () {
+      nomor.value = formatNomorPreview(tanggal.value);
+    });
+
+    // Event Handling Pengiriman Form ke Supabase
+    form.addEventListener("submit", async function (event) {
       event.preventDefault();
 
-      var data = {
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Mengirim...";
+      message.style.display = "none";
+
+      const formData = {
         tanggal: document.getElementById("tanggal").value,
         nomor: document.getElementById("nomor").value,
         nama: document.getElementById("nama").value,
@@ -379,23 +394,39 @@
         jabatan: document.getElementById("jabatan").value,
         area: document.getElementById("area").value,
         kategori: document.getElementById("kategori").value,
-        tanggalEfektif: document.getElementById("tanggalEfektif").value,
+        tanggal_efektif: document.getElementById("tanggalEfektif").value || null,
         judul: document.getElementById("judul").value,
-        kondisiSaatIni: document.getElementById("kondisiSaatIni").value,
+        kondisi_saat_ini: document.getElementById("kondisiSaatIni").value,
         perubahan: document.getElementById("perubahan").value,
         alasan: document.getElementById("alasan").value,
         dampak: document.getElementById("dampak").value,
         pelatihan: document.querySelector('input[name="pelatihan"]:checked')?.value || "",
         risiko: document.getElementById("risiko").value,
         tindakan: document.getElementById("tindakan").value,
-        changePoint: Array.from(document.querySelectorAll('input[name="changePoint"]:checked')).map(function (cb) { return cb.value; })
+        change_point: Array.from(document.querySelectorAll('input[name="changePoint"]:checked')).map(cb => cb.value)
       };
 
-      var stored = JSON.parse(localStorage.getItem("henkatenData") || "[]");
-      stored.push(data);
-      localStorage.setItem("henkatenData", JSON.stringify(stored));
+      // Simpan ke Supabase PostgreSQL
+      const { data, error } = await supabaseClient
+        .from('henkaten_submissions')
+        .insert([formData]);
 
-      message.style.display = "block";
+      submitBtn.disabled = false;
+      submitBtn.innerText = "Kirim Form";
+
+      if (error) {
+        message.className = "message error";
+        message.innerText = "Gagal menyimpan data: " + error.message;
+        message.style.display = "block";
+      } else {
+        message.className = "message success";
+        message.innerText = "Pengajuan Henkaten berhasil disimpan ke database!";
+        message.style.display = "block";
+        form.reset();
+        tanggal.valueAsDate = new Date();
+        nomor.value = formatNomorPreview(tanggal.value);
+      }
+
       message.scrollIntoView({ behavior: "smooth", block: "center" });
     });
 
@@ -403,9 +434,9 @@
       message.style.display = "none";
       setTimeout(function () {
         tanggal.valueAsDate = new Date();
+        nomor.value = formatNomorPreview(tanggal.value);
       }, 0);
     });
   </script>
 </body>
 </html>
-```
